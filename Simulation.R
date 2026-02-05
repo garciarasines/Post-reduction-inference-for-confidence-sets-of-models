@@ -6,7 +6,7 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 
 source("~/.../Gaussian_functions.R")
 
-two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.6, alpha = 0.05, B = 500){
+two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.6, alpha = 0.05, Sigma_str = "block", B = 100){
   
   # Correct model 
   E_null = which(theta != 0)        
@@ -48,7 +48,7 @@ two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.
   for(b in 1:B){
     
     # Data
-    X = design(n, p, rho)
+    X = design(n, p, rho, Sigma_str)
     y = y_sample(X, theta, sigma)
     sigma_hat = sigma_estimator(y, X, gamma)
     
@@ -120,7 +120,7 @@ two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.
                        c(sd(cov_COX_Q1)/sqrt(B), sd(cov_COX_Q2)/sqrt(B), sd(cov_COX_R)/sqrt(B), sd(cov_COX_LRT)/sqrt(B), sd(cov_COX_LRTsplit)/sqrt(B)))
   results[[3]] = rbind(c(mean(size_COX_Q1), mean(size_COX_Q2), mean(size_COX_R), mean(size_COX_LRT), mean(size_COX_LRTsplit)),
                        c(sd(size_COX_Q1)/sqrt(B), sd(size_COX_Q2)/sqrt(B), sd(size_COX_R)/sqrt(B), sd(size_COX_LRT)/sqrt(B), sd(size_COX_LRTsplit)/sqrt(B)))
-  
+
   # Lasso results
   results[[4]] = rbind(c(mean(sure_screening_LASSO), mean(sure_screening_split_LASSO)), c(sd(sure_screening_LASSO)/sqrt(B), sd(sure_screening_split_LASSO)/sqrt(B)))
   results[[5]] = rbind(c(mean(cov_LASSO_Q1), mean(cov_LASSO_Q2), mean(cov_LASSO_R), mean(cov_LASSO_LRT), mean(cov_LASSO_LRTsplit)),
@@ -140,10 +140,13 @@ ns = c(100, 150)
 ts = c(0.5, 1)
 rhos = c(0.1, 0.5)
 
-# Example: table 1
-n = ns[2]
-t = ts[2]
-rho = rhos[2]
+# Example: (low, low, low) = (1, 1, 1)
+n = ns[1]
+t = ts[1]
+rho = rhos[1]
 theta = c(rep(t, 3), rep(0, p - 3))
 
-two_stage(n, p, theta, ks, sigma, rho) 
+two_stage(n, p, theta, ks, sigma, rho, Sigma_str = "block") 
+
+
+
