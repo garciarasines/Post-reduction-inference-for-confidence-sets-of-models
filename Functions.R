@@ -1,7 +1,12 @@
 # Data generation
-design = function(n, p, rho){
- Sigma = outer(1:p, 1:p, function(i, j) rho^abs(i-j))     
- return(rmvnorm(n, mean = rep(0, p), sigma = Sigma))
+design = function(n, p, rho, Sigma_str = "toeplitz"){
+  if (Sigma_str == "toeplitz"){
+    Sigma = outer(1:p, 1:p, function(i, j) rho^abs(i-j))     
+  } else if (Sigma_str == "block"){
+    Sigma = diag(p)
+    Sigma[1:10, 1:10] = (1 - rho)*diag(10) + rho*matrix(1, 10, 10)
+  } 
+  return(rmvnorm(n, mean = rep(0, p), sigma = Sigma))
 }
 y_sample = function(X, theta, sigma){
   n = nrow(X)
@@ -211,6 +216,9 @@ confset = function(type, y, X, sigma_hat, E_hat, max_size_model, alpha, k, gamma
   return(confset)
 
 }
+
+
+
 
 
 
