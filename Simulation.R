@@ -6,7 +6,7 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 
 source("~/.../Gaussian_functions.R")
 
-two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.6, alpha = 0.05, Sigma_str = "block", B = 100){
+two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.6, alpha = 0.05, Sigma_str = "block", B = 500){
   
   # Correct model 
   E_null = which(theta != 0)        
@@ -112,21 +112,49 @@ two_stage = function(n, p, theta, ks, sigma, rho, max_size_model = 5, gamma = 0.
     
   }
   
-  results = list()
+  ms_mat = function(x_mean, x_se, coln) {
+    m = rbind(Mean = x_mean, SE = x_se)
+    colnames(m) <- coln
+    m
+  }
   
-  # Cox results
-  results[[1]] = rbind(c(mean(sure_screening_COX), mean(sure_screening_split_COX)), c(sd(sure_screening_COX)/sqrt(B), sd(sure_screening_split_COX)/sqrt(B)))
-  results[[2]] = rbind(c(mean(cov_COX_Q1), mean(cov_COX_Q2), mean(cov_COX_R), mean(cov_COX_LRT), mean(cov_COX_LRTsplit)),
-                       c(sd(cov_COX_Q1)/sqrt(B), sd(cov_COX_Q2)/sqrt(B), sd(cov_COX_R)/sqrt(B), sd(cov_COX_LRT)/sqrt(B), sd(cov_COX_LRTsplit)/sqrt(B)))
-  results[[3]] = rbind(c(mean(size_COX_Q1), mean(size_COX_Q2), mean(size_COX_R), mean(size_COX_LRT), mean(size_COX_LRTsplit)),
-                       c(sd(size_COX_Q1)/sqrt(B), sd(size_COX_Q2)/sqrt(B), sd(size_COX_R)/sqrt(B), sd(size_COX_LRT)/sqrt(B), sd(size_COX_LRTsplit)/sqrt(B)))
-
-  # Lasso results
-  results[[4]] = rbind(c(mean(sure_screening_LASSO), mean(sure_screening_split_LASSO)), c(sd(sure_screening_LASSO)/sqrt(B), sd(sure_screening_split_LASSO)/sqrt(B)))
-  results[[5]] = rbind(c(mean(cov_LASSO_Q1), mean(cov_LASSO_Q2), mean(cov_LASSO_R), mean(cov_LASSO_LRT), mean(cov_LASSO_LRTsplit)),
-                       c(sd(cov_LASSO_Q1)/sqrt(B), sd(cov_LASSO_Q2)/sqrt(B), sd(cov_LASSO_R)/sqrt(B), sd(cov_LASSO_LRT)/sqrt(B), sd(cov_LASSO_LRTsplit)/sqrt(B)))
-  results[[6]] = rbind(c(mean(size_LASSO_Q1), mean(size_LASSO_Q2), mean(size_LASSO_R), mean(size_LASSO_LRT), mean(size_LASSO_LRTsplit)),
-                       c(sd(size_LASSO_Q1)/sqrt(B), sd(size_LASSO_Q2)/sqrt(B), sd(size_LASSO_R)/sqrt(B), sd(size_LASSO_LRT)/sqrt(B), sd(size_LASSO_LRTsplit)/sqrt(B)))
+  results = list(
+    cox = list(
+      sure_screening = ms_mat(
+        x_mean = c(mean(sure_screening_COX), mean(sure_screening_split_COX)),
+        x_se   = c(sd(sure_screening_COX)/sqrt(B), sd(sure_screening_split_COX)/sqrt(B)),
+        coln   = c("full_sample", "split_encompassing")
+      ),
+      coverage = ms_mat(
+        x_mean = c(mean(cov_COX_Q1), mean(cov_COX_Q2), mean(cov_COX_R), mean(cov_COX_LRT), mean(cov_COX_LRTsplit)),
+        x_se   = c(sd(cov_COX_Q1)/sqrt(B), sd(cov_COX_Q2)/sqrt(B), sd(cov_COX_R)/sqrt(B), sd(cov_COX_LRT)/sqrt(B), sd(cov_COX_LRTsplit)/sqrt(B)),
+        coln   = c("Q_k1", "Q_k2", "R", "LRT", "LRT_split")
+      ),
+      size = ms_mat(
+        x_mean = c(mean(size_COX_Q1), mean(size_COX_Q2), mean(size_COX_R), mean(size_COX_LRT), mean(size_COX_LRTsplit)),
+        x_se   = c(sd(size_COX_Q1)/sqrt(B), sd(size_COX_Q2)/sqrt(B), sd(size_COX_R)/sqrt(B), sd(size_COX_LRT)/sqrt(B), sd(size_COX_LRTsplit)/sqrt(B)),
+        coln   = c("Q_k1", "Q_k2", "R", "LRT", "LRT_split")
+      )
+    ),
+    
+    lasso = list(
+      sure_screening = ms_mat(
+        x_mean = c(mean(sure_screening_LASSO), mean(sure_screening_split_LASSO)),
+        x_se   = c(sd(sure_screening_LASSO)/sqrt(B), sd(sure_screening_split_LASSO)/sqrt(B)),
+        coln   = c("full_sample", "split_encompassing")
+      ),
+      coverage = ms_mat(
+        x_mean = c(mean(cov_LASSO_Q1), mean(cov_LASSO_Q2), mean(cov_LASSO_R), mean(cov_LASSO_LRT), mean(cov_LASSO_LRTsplit)),
+        x_se   = c(sd(cov_LASSO_Q1)/sqrt(B), sd(cov_LASSO_Q2)/sqrt(B), sd(cov_LASSO_R)/sqrt(B), sd(cov_LASSO_LRT)/sqrt(B), sd(cov_LASSO_LRTsplit)/sqrt(B)),
+        coln   = c("Q_k1", "Q_k2", "R", "LRT", "LRT_split")
+      ),
+      size = ms_mat(
+        x_mean = c(mean(size_LASSO_Q1), mean(size_LASSO_Q2), mean(size_LASSO_R), mean(size_LASSO_LRT), mean(size_LASSO_LRTsplit)),
+        x_se   = c(sd(size_LASSO_Q1)/sqrt(B), sd(size_LASSO_Q2)/sqrt(B), sd(size_LASSO_R)/sqrt(B), sd(size_LASSO_LRT)/sqrt(B), sd(size_LASSO_LRTsplit)/sqrt(B)),
+        coln   = c("Q_k1", "Q_k2", "R", "LRT", "LRT_split")
+      )
+    )
+  )
   
   return(results)
   
@@ -147,6 +175,5 @@ rho = rhos[1]
 theta = c(rep(t, 3), rep(0, p - 3))
 
 two_stage(n, p, theta, ks, sigma, rho, Sigma_str = "block") 
-
 
 
